@@ -9,10 +9,17 @@ import { ScraperGrid } from "@/components/scrapers/ScraperGrid";
 import { RunControls } from "@/components/scrapers/RunControls";
 import { LiveLogPreview } from "@/components/scrapers/LiveLogPreview";
 import { LastRunBanner } from "@/components/dashboard/LastRunBanner";
-import { Activity } from "lucide-react";
+import { Activity, Globe2, ListFilter, Target } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { api } from "@/lib/api";
-import type { RunFinishEvent } from "@/lib/api/client";
+import type { RunFinishEvent, RunOptions } from "@/lib/api/client";
+
+function parseManualList(value: string): string[] {
+  return value
+    .split(/[\n,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
 
 export function DashboardView() {
   const { scrapers } = useScrapers();
@@ -24,6 +31,9 @@ export function DashboardView() {
   const [finishEvent, setFinishEvent] = useState<RunFinishEvent | null>(
     () => api.getLastFinishedRun?.() ?? null
   );
+  const [keywordText, setKeywordText] = useState("");
+  const [countryText, setCountryText] = useState("");
+  const [targetSuppliers, setTargetSuppliers] = useState("");
   const [bannerDismissedFor, setBannerDismissedFor] = useState<string | null>(null);
   const autoDownloadedRunsRef = useRef<Set<string>>(new Set());
 
@@ -42,6 +52,16 @@ export function DashboardView() {
     previewScraperId && activeForLogs.some((s) => s.id === previewScraperId)
       ? previewScraperId
       : activeForLogs[0]?.id ?? null;
+  const manualRunOptions = useMemo<RunOptions>(() => {
+    const keywords = parseManualList(keywordText);
+    const countries = parseManualList(countryText);
+    const target = Number.parseInt(targetSuppliers, 10);
+    return {
+      ...(keywords.length ? { keywords } : {}),
+      ...(countries.length ? { countries } : {}),
+      ...(Number.isFinite(target) && target > 0 ? { targetSuppliers: target } : {}),
+    };
+  }, [countryText, keywordText, targetSuppliers]);
 
   useEffect(() => {
     if (!api.onRunFinished) return;
@@ -111,6 +131,50 @@ export function DashboardView() {
 
       <StatsTiles scrapers={scrapers} />
 
+      <section className="grid gap-3 rounded-lg border border-white/[0.08] bg-zinc-950/50 p-4 lg:grid-cols-[1fr_1fr_180px]">
+        <label className="min-w-0">
+          <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <ListFilter className="size-3.5" />
+            Keywords
+          </span>
+          <textarea
+            value={keywordText}
+            onChange={(e) => setKeywordText(e.target.value)}
+            rows={3}
+            placeholder="cosmetic bottles, airless pumps"
+            className="min-h-24 w-full resize-y rounded-lg border border-white/10 bg-zinc-900/80 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-emerald-500/50"
+          />
+        </label>
+        <label className="min-w-0">
+          <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <Globe2 className="size-3.5" />
+            Countries
+          </span>
+          <textarea
+            value={countryText}
+            onChange={(e) => setCountryText(e.target.value)}
+            rows={3}
+            placeholder="China, South Korea, Vietnam"
+            className="min-h-24 w-full resize-y rounded-lg border border-white/10 bg-zinc-900/80 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-emerald-500/50"
+          />
+        </label>
+        <label className="min-w-0">
+          <span className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">
+            <Target className="size-3.5" />
+            Target
+          </span>
+          <input
+            value={targetSuppliers}
+            onChange={(e) => setTargetSuppliers(e.target.value)}
+            type="number"
+            min={1}
+            step={1}
+            placeholder="500"
+            className="h-10 w-full rounded-lg border border-white/10 bg-zinc-900/80 px-3 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-emerald-500/50"
+          />
+        </label>
+      </section>
+
       {activeForLogs.length > 0 && effectivePreviewScraperId ? (
         <div className="space-y-2">
           <div className="flex flex-wrap gap-2">
@@ -148,7 +212,7 @@ export function DashboardView() {
           if (next !== has) controls.toggle(id);
         }}
         onStart={async (id) => {
-          await controls.startOne(id);
+          await controls.startOne(id, manualRunOptions);
           show(`Started ${id}`, "success");
         }}
         onStop={async (id) => {
@@ -162,7 +226,7 @@ export function DashboardView() {
         selectableCount={selectableScrapers.length}
         onClearSelection={() => controls.clearSelection()}
         onRunSelected={async () => {
-          await controls.runSelected();
+          await controls.runSelected(manualRunOptions);
           show(`Queued ${controls.selectedIds.length} scraper(s)`, "success");
         }}
         onStopAll={async () => {

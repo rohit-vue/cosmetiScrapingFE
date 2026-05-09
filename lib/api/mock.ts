@@ -1,4 +1,4 @@
-import type { ScraperClient, Unsubscribe } from "./client";
+import type { RunOptions, ScraperClient, Unsubscribe } from "./client";
 import type {
   LogEntry,
   LogLevel,
@@ -353,13 +353,15 @@ class MockScraperClientImpl implements ScraperClient {
     return s ? cloneOne(s) : undefined;
   }
 
-  async start(ids: string[]): Promise<void> {
+  async start(ids: string[], options?: RunOptions): Promise<void> {
     const unique = [...new Set(ids)].filter(Boolean);
     let delay = 0;
     for (const id of unique) {
       const s = this.scrapers.get(id);
       if (!s) continue;
       if (s.status === "running" || s.status === "queued") continue;
+      if (options?.keywords?.length) s.keywords = [...options.keywords];
+      if (options?.countries?.length) s.countries = [...options.countries];
 
       const gateOuter = this.startGen.get(id) ?? 0;
       globalThis.setTimeout(() => {
@@ -370,6 +372,9 @@ class MockScraperClientImpl implements ScraperClient {
         cur.progress = 0;
         this.emitScrapers();
         this.pushLog(id, "info", "Queued…");
+        if (options?.targetSuppliers) {
+          this.pushLog(id, "info", `Manual target suppliers: ${options.targetSuppliers}`);
+        }
 
         const gateInner = this.startGen.get(id) ?? 0;
         globalThis.setTimeout(() => {

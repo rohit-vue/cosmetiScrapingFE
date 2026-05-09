@@ -1,6 +1,7 @@
 import type {
   RunFinishEvent,
   RunFinishOutcome,
+  RunOptions,
   ScraperClient,
   ScraperFinishEvent,
 } from "./client";
@@ -263,10 +264,15 @@ export const httpScraperClient: ScraperClient = {
     return currentScrapers.find((s) => s.id === id);
   },
 
-  async start(ids) {
+  async start(ids, options?: RunOptions) {
     const out = await request<{ run_id: string }>("/api/runs", {
       method: "POST",
-      body: JSON.stringify({ scraper_ids: ids }),
+      body: JSON.stringify({
+        scraper_ids: ids,
+        keywords: options?.keywords?.length ? options.keywords : undefined,
+        countries: options?.countries?.length ? options.countries : undefined,
+        target_suppliers: options?.targetSuppliers,
+      }),
     });
     setCurrentRunId(out.run_id);
     // Allow the new run to fire its finish event even if it shares an id with state.

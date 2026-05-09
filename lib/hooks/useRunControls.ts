@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { api } from "@/lib/api";
+import type { RunOptions } from "@/lib/api/client";
 
 export function useRunControls() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -21,10 +22,10 @@ export function useRunControls() {
 
   const clearSelection = useCallback(() => setSelected(new Set()), []);
 
-  const runSelected = useCallback(async () => {
+  const runSelected = useCallback(async (options?: RunOptions) => {
     const ids = [...selected];
     if (ids.length === 0) return;
-    await api.start(ids);
+    await api.start(ids, options);
   }, [selected]);
 
   const stopAll = useCallback(async () => {
@@ -35,8 +36,8 @@ export function useRunControls() {
     if (running.length) await api.stop(running);
   }, []);
 
-  const startOne = useCallback(async (id: string) => {
-    await api.start([id]);
+  const startOne = useCallback(async (id: string, options?: RunOptions) => {
+    await api.start([id], options);
   }, []);
 
   const stopOne = useCallback(async (id: string) => {

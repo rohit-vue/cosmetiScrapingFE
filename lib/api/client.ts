@@ -19,10 +19,16 @@ export type ScraperFinishEvent = {
   finishedAt: string;
 };
 
+export type RunOptions = {
+  keywords?: string[];
+  countries?: string[];
+  targetSuppliers?: number;
+};
+
 export type ScraperClient = {
   list(): Promise<Scraper[]>;
   get(id: string): Promise<Scraper | undefined>;
-  start(ids: string[]): Promise<void>;
+  start(ids: string[], options?: RunOptions): Promise<void>;
   stop(ids: string[]): Promise<void>;
   subscribeLogs(scraperId: string, cb: (entries: LogEntry[]) => void): Unsubscribe;
   subscribeScrapers(cb: (scrapers: Scraper[]) => void): Unsubscribe;
