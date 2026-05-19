@@ -55,13 +55,13 @@ function initialRegistry(): Map<string, Scraper> {
         scriptFile: "tradewheel_scraper.py",
         keywords: SAMPLE_KEYWORDS,
         countries: SAMPLE_COUNTRIES,
-        outputCsv: "suppliers_phase1_raw.csv",
+        outputCsv: "tradewheel_suppliers_raw.csv",
       },
       {
         id: "kompass",
         name: "Kompass",
         domain: "kompass.com",
-        scriptFile: "kompass_scraper_final.py",
+        scriptFile: "kompass_enhanced.py",
         keywords: SAMPLE_KEYWORDS.slice(0, 4),
         countries: SAMPLE_COUNTRIES.slice(0, 5),
         outputCsv: "kompass_suppliers_phase1_raw.csv",
@@ -96,6 +96,32 @@ function initialRegistry(): Map<string, Scraper> {
         keywords: ["category 142", "cosmetic packaging"],
         countries: SAMPLE_COUNTRIES,
         outputCsv: "exportpages_suppliers_raw.csv",
+      },
+      {
+        id: "ensun",
+        name: "Ensun",
+        domain: "ensun.io",
+        scriptFile: "ensun_script.py",
+        keywords: [
+          "cosmetic packaging",
+          "cosmetic bottles",
+          "cosmetic tubes",
+        ],
+        countries: SAMPLE_COUNTRIES,
+        outputCsv: "ensun_suppliers_phase1_raw.csv",
+      },
+      {
+        id: "europages",
+        name: "Europages",
+        domain: "europages.co.uk",
+        scriptFile: "eurpages_scraper.py",
+        keywords: [
+          "cosmetic packaging",
+          "cosmetic bottles",
+          "cosmetic tubes",
+        ],
+        countries: SAMPLE_COUNTRIES,
+        outputCsv: "europages_suppliers_phase1_raw.csv",
       },
     ];
 
