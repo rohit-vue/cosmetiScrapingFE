@@ -242,6 +242,8 @@ function toScraper(raw: ScraperWire): Scraper {
     cleanedCsv: raw.cleanedCsv,
     keywords: raw.keywords ?? [],
     countries: raw.countries ?? [],
+    manualKeywords: raw.manualKeywords ?? [],
+    manualCountries: raw.manualCountries ?? [],
     status: raw.status,
     progress: raw.progress ?? 0,
     lastRun: raw.lastRun ?? undefined,

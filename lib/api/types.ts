@@ -32,6 +32,8 @@ export type Scraper = {
   scriptFile: string;
   keywords: string[];
   countries: string[];
+  manualKeywords?: string[];
+  manualCountries?: string[];
   outputCsv: string;
   cleanedCsv?: string;
   status: ScraperStatus;

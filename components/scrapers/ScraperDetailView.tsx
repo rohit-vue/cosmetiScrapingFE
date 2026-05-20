@@ -104,6 +104,8 @@ export function ScraperDetailView({ scraperId }: { scraperId: string }) {
     scraper.status === "stopped";
   const canStop =
     scraper.status === "running" || scraper.status === "queued";
+  const manualKeywords = scraper.manualKeywords ?? [];
+  const manualCountries = scraper.manualCountries ?? [];
 
   const cleanedCsvUrl =
     latestTerminalRun &&
@@ -284,31 +286,35 @@ export function ScraperDetailView({ scraperId }: { scraperId: string }) {
                   </p>
                 )}
               </div>
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  Keywords
-                </h3>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {scraper.keywords.slice(0, 12).map((k) => (
-                    <Tag key={k} variant="accent">
-                      {k}
-                    </Tag>
-                  ))}
-                  {scraper.keywords.length > 12 ? (
-                    <Tag variant="muted">+{scraper.keywords.length - 12} more</Tag>
-                  ) : null}
+              {manualKeywords.length ? (
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Keywords
+                  </h3>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {manualKeywords.slice(0, 12).map((k) => (
+                      <Tag key={k} variant="accent">
+                        {k}
+                      </Tag>
+                    ))}
+                    {manualKeywords.length > 12 ? (
+                      <Tag variant="muted">+{manualKeywords.length - 12} more</Tag>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                  Countries
-                </h3>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {scraper.countries.map((c) => (
-                    <Tag key={c}>{c}</Tag>
-                  ))}
+              ) : null}
+              {manualCountries.length ? (
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
+                    Countries
+                  </h3>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {manualCountries.map((c) => (
+                      <Tag key={c}>{c}</Tag>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : null}
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                   Recent runs

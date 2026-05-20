@@ -36,6 +36,8 @@ function cloneOne(s: Scraper): Scraper {
     ...s,
     keywords: [...s.keywords],
     countries: [...s.countries],
+    manualKeywords: s.manualKeywords ? [...s.manualKeywords] : undefined,
+    manualCountries: s.manualCountries ? [...s.manualCountries] : undefined,
     recentRuns: s.recentRuns.map((r) => ({ ...r })),
     lastRun: s.lastRun ? { ...s.lastRun } : undefined,
   };
@@ -386,8 +388,10 @@ class MockScraperClientImpl implements ScraperClient {
       const s = this.scrapers.get(id);
       if (!s) continue;
       if (s.status === "running" || s.status === "queued") continue;
-      if (options?.keywords?.length) s.keywords = [...options.keywords];
-      if (options?.countries?.length) s.countries = [...options.countries];
+      s.manualKeywords = options?.keywords?.length ? [...options.keywords] : undefined;
+      s.manualCountries = options?.countries?.length ? [...options.countries] : undefined;
+      if (s.manualKeywords) s.keywords = [...s.manualKeywords];
+      if (s.manualCountries) s.countries = [...s.manualCountries];
 
       const gateOuter = this.startGen.get(id) ?? 0;
       globalThis.setTimeout(() => {
