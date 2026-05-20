@@ -5,11 +5,16 @@ import { api } from "@/lib/api";
 import type { LogEntry } from "@/lib/api/types";
 
 export function useScraperLogs(scraperId: string) {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [state, setState] = useState<{ scraperId: string; logs: LogEntry[] }>({
+    scraperId,
+    logs: [],
+  });
 
   useEffect(() => {
-    return api.subscribeLogs(scraperId, setLogs);
+    return api.subscribeLogs(scraperId, (entries) => {
+      setState({ scraperId, logs: entries });
+    });
   }, [scraperId]);
 
-  return logs;
+  return state.scraperId === scraperId ? state.logs : [];
 }

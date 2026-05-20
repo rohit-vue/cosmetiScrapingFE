@@ -246,9 +246,15 @@ function toScraper(raw: ScraperWire): Scraper {
     manualCountries: raw.manualCountries ?? [],
     status: raw.status,
     progress: raw.progress ?? 0,
+    activeRunId: raw.activeRunId ?? undefined,
     lastRun: raw.lastRun ?? undefined,
     recentRuns: raw.recentRuns ?? [],
   };
+}
+
+function logRunIdFor(scraperId: string): string | null {
+  const scraper = currentScrapers.find((s) => s.id === scraperId);
+  return scraper?.activeRunId ?? scraper?.lastRun?.id ?? currentRunId;
 }
 
 export const httpScraperClient: ScraperClient = {
@@ -285,23 +291,44 @@ export const httpScraperClient: ScraperClient = {
   },
 
   async stop(ids) {
-    if (!currentRunId) return;
-    await request(`/api/runs/${currentRunId}/stop`, {
-      method: "POST",
-      body: JSON.stringify({ scraper_ids: ids }),
-    });
+    const idsByRun = new Map<string, string[]>();
+    for (const id of ids) {
+      const runId = logRunIdFor(id);
+      if (!runId) continue;
+      idsByRun.set(runId, [...(idsByRun.get(runId) ?? []), id]);
+    }
+    await Promise.all(
+      [...idsByRun.entries()].map(([runId, scraperIds]) =>
+        request(`/api/runs/${runId}/stop`, {
+          method: "POST",
+          body: JSON.stringify({ scraper_ids: scraperIds }),
+        })
+      )
+    );
   },
 
   subscribeLogs(scraperId, cb) {
     const logs: LogEntry[] = [];
     let es: EventSource | null = null;
     let closed = false;
+    let connectedRunId: string | null = null;
 
     const connect = () => {
-      if (closed || !currentRunId) return;
+      const nextRunId = logRunIdFor(scraperId);
+      if (closed) return;
+      if (!nextRunId) {
+        logs.length = 0;
+        connectedRunId = null;
+        cb([]);
+        return;
+      }
+      if (es && connectedRunId === nextRunId) return;
       es?.close();
+      connectedRunId = nextRunId;
+      logs.length = 0;
+      cb([]);
       es = new EventSource(
-        `${API_BASE}/api/runs/${currentRunId}/scrapers/${scraperId}/logs`
+        `${API_BASE}/api/runs/${nextRunId}/scrapers/${scraperId}/logs`
       );
       es.onmessage = (evt) => {
         const item = JSON.parse(evt.data) as LogEntry;
@@ -311,22 +338,23 @@ export const httpScraperClient: ScraperClient = {
       };
       es.onerror = () => {
         es?.close();
+        es = null;
       };
     };
 
     const onRunChanged = () => {
-      logs.length = 0;
-      cb([]);
       connect();
     };
+    const onScrapersChanged = () => connect();
 
     runListeners.add(onRunChanged);
-    if (!currentRunId) cb([]);
+    scraperSubscribers.add(onScrapersChanged);
     connect();
 
     return () => {
       closed = true;
       runListeners.delete(onRunChanged);
+      scraperSubscribers.delete(onScrapersChanged);
       es?.close();
     };
   },

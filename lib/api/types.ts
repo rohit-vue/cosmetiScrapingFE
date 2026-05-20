@@ -38,6 +38,7 @@ export type Scraper = {
   cleanedCsv?: string;
   status: ScraperStatus;
   progress: number;
+  activeRunId?: string;
   lastRun?: RunSummary;
   recentRuns: RunSummary[];
 };
