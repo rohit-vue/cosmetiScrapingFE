@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cosmetic Scraper Frontend
 
-## Getting Started
+Next.js dashboard for starting cosmetic supplier scrapers, watching live scraper logs, tracking run status, and downloading raw, partial, cleaned, and combined CSV outputs from the Python backend.
 
-First, run the development server:
+## Requirements
+
+- Node.js 20 or newer
+- npm, included with Node.js
+- Python backend running from `../CosmeticScraping`
+- Backend API available at `http://localhost:8000` by default
+
+## Frontend Installation
+
+From the frontend folder:
+
+```bash
+cd frontendcosmetic
+npm install
+```
+
+If dependencies are already installed, you can skip `npm install`.
+
+## Environment
+
+The frontend reads the backend API URL from `NEXT_PUBLIC_API_BASE_URL`.
+
+Create `frontendcosmetic/.env.local` only if the backend is not running on the default URL:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+```
+
+Without this file, the frontend uses `http://localhost:8000`.
+
+## Running The App
+
+Start the backend first:
+
+```bash
+cd ../CosmeticScraping
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+python -m playwright install
+python run_server.py
+```
+
+Then start the frontend in a second terminal:
+
+```bash
+cd frontendcosmetic
+npm run dev
+```
+
+Open `http://localhost:3000` in your browser.
+
+## Useful Commands
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Runs the development server with webpack.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Builds the production app.
 
-## Learn More
+```bash
+npm run start
+```
 
-To learn more about Next.js, take a look at the following resources:
+Runs the production build after `npm run build`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run lint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Runs ESLint.
 
-## Deploy on Vercel
+## Backend Connection
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The dashboard calls these backend endpoints:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `GET /api/health`
+- `GET /api/scrapers`
+- `POST /api/runs`
+- `POST /api/runs/{run_id}/stop`
+- `GET /api/runs/{run_id}/state`
+- `GET /api/runs/{run_id}/scrapers/{scraper_id}/logs`
+- CSV downloads under `/api/runs/{run_id}/...`
+
+Backend CSV outputs are written inside `../CosmeticScraping/runs/{run_id}`.
+
+## Backend Setup CSV
+
+A backend setup checklist is available at:
+
+```text
+../CosmeticScraping/backend_setup.csv
+```
+
+It includes backend requirements, Python package versions, installation commands, environment variables, and run commands.
+
+## Troubleshooting
+
+- If the dashboard cannot load scrapers, make sure `python run_server.py` is running in `CosmeticScraping`.
+- If browser automation fails, run `python -m playwright install` inside the backend virtual environment.
+- If CORS or API calls fail, confirm `NEXT_PUBLIC_API_BASE_URL` matches the backend URL.
+- If scraper downloads are missing, check `CosmeticScraping/runs/{run_id}` and the live scraper logs in the dashboard.
